@@ -7,7 +7,7 @@
 #define FIXNUM_TAG 0x00
 #define FIXNUM_SHIFT 2
 
-#define CHARACTER_MASK 0x0f
+#define CHARACTER_MASK 0x3f
 #define CHARACTER_TAG 0x0f
 #define CHARACTER_SHIFT 8
 
