@@ -1,20 +1,17 @@
 use inc::compile::compile;
-use rand::random;
-use std::{fs, path::Path, process::Command};
+use std::{fs::write, process::Command};
+
+mod temporary_directory;
+
+use temporary_directory::TemporaryDirectory;
 
 fn test(input: &str, expected: &str) {
-    // TODO: this test method sucks
-    // just make a static atomic and increment with each test
-
-    let path = format!("/tmp/inc-{}", random::<u32>());
-    let directory = Path::new(&path);
-    let object = directory.join("test.s");
-    let binary = directory.join("test");
-
-    fs::create_dir_all(&directory).unwrap();
+    let directory = TemporaryDirectory::create().unwrap();
+    let object = directory.0.join("test.s");
+    let binary = directory.0.join("test");
 
     let output = compile(input.parse().unwrap()).unwrap();
-    fs::write(&object, output).unwrap();
+    write(&object, output).unwrap();
 
     let status = Command::new("clang")
         .arg(&object)
@@ -23,21 +20,13 @@ fn test(input: &str, expected: &str) {
         .arg(&binary)
         .status()
         .unwrap();
-
     assert!(status.success());
 
     let result = Command::new(&binary).output().unwrap();
     let actual = String::from_utf8(result.stdout).unwrap();
-    let actual = actual.trim();
 
     assert!(result.status.success());
-    assert_eq!(
-        expected, actual,
-        "input = {}, expected = {}, actual = {}",
-        input, expected, actual
-    );
-
-    fs::remove_dir_all(&directory).unwrap();
+    assert_eq!(expected, actual.trim());
 }
 
 fn cases<'a, I: IntoIterator<Item = &'a (&'a str, &'a str)>>(cases: I) {
@@ -217,7 +206,7 @@ mod unary {
         cases(&[
             (r"(fxzero? 1)", "#f"),
             (r"(fxzero? -1)", "#f"),
-            (r"(fxzero? 64)", "#f"), // Somethings goin on with 64 and 960, I think it has to do with only comparing %al
+            (r"(fxzero? 64)", "#f"),
             (r"(fxzero? 960)", "#f"),
             (r"(fxzero? #f)", "#f"),
             (r"(fxzero? #\newline)", "#f"),
