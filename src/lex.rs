@@ -12,7 +12,7 @@ pub enum Token<'a> {
     Unrecognized,
 }
 
-pub fn lex<'a>(source: &'a str) -> impl Iterator<Item = (Token<'a>, Range<usize>)> {
+pub fn lex(source: &str) -> impl Iterator<Item = (Token<'_>, Range<usize>)> {
     Lexer { source, start: 0 }
 }
 
@@ -50,7 +50,7 @@ impl<'a> Iterator for Lexer<'a> {
 
         loop {
             if self.start >= self.source.len() {
-                break None
+                break None;
             } else {
                 let mut state = Start;
                 let mut end = self.start;
@@ -77,7 +77,6 @@ impl<'a> Iterator for Lexer<'a> {
                     if token == Token::Unrecognized {
                         end += 1;
                     }
-
                     self.start = end;
 
                     break Some((token, start..end));
@@ -127,19 +126,21 @@ fn transition(state: &State, source: &str) -> Option<State> {
             b't' => Some(True),
             _ => None,
         },
-        Slash => if source.starts_with("newline") {
-            Some(Newline)
-        } else if source.starts_with("return") {
-            Some(Return)
-        } else if source.starts_with("space") {
-            Some(Space)
-        } else if source.starts_with("tab") {
-            Some(Tab)
-        } else if byte.is_ascii_graphic() {
-            Some(Character)
-        } else {
-            None
-        },
+        Slash => {
+            if source.starts_with("newline") {
+                Some(Newline)
+            } else if source.starts_with("return") {
+                Some(Return)
+            } else if source.starts_with("space") {
+                Some(Space)
+            } else if source.starts_with("tab") {
+                Some(Tab)
+            } else if byte.is_ascii_graphic() {
+                Some(Character)
+            } else {
+                None
+            }
+        }
         Sign => {
             if byte.is_ascii_digit() {
                 Some(Integer)
@@ -211,7 +212,11 @@ mod tests {
         for (source, expected) in &cases {
             let (actual, _) = lex(source).next().unwrap();
 
-            assert_eq!(actual, *expected, "source = {:?}, expected = {:?}, actual = {:?}", source, expected, actual);
+            assert_eq!(
+                actual, *expected,
+                "source = {:?}, expected = {:?}, actual = {:?}",
+                source, expected, actual
+            );
         }
     }
 
@@ -264,7 +269,9 @@ mod tests {
             RightParenthesis,
             RightParenthesis,
         ];
-        let actual = lex(source).map(|(token, _)| token).inspect(|token| println!("{:?}", token));
+        let actual = lex(source)
+            .map(|(token, _)| token)
+            .inspect(|token| println!("{:?}", token));
 
         assert!(actual.eq(expected));
     }
@@ -272,12 +279,35 @@ mod tests {
     #[test]
     fn tricky() {
         let cases = [
-            ("(hello 5)  ", vec![(LeftParenthesis, 0..1), (Symbol("hello"), 1..6), (Integer(5), 7..8), (RightParenthesis, 8..9)]),
+            (
+                "(hello 5)  ",
+                vec![
+                    (LeftParenthesis, 0..1),
+                    (Symbol("hello"), 1..6),
+                    (Integer(5), 7..8),
+                    (RightParenthesis, 8..9),
+                ],
+            ),
             ("", vec![]),
             (" \n\t", vec![]),
             ("[[", vec![(Unrecognized, 0..1), (Unrecognized, 1..2)]),
-            ("(not #c)", vec![(LeftParenthesis, 0..1), (Symbol("not"), 1..4), (Unrecognized, 5..7), (RightParenthesis, 7..8)]),
-            ("(foo bar", vec![(LeftParenthesis, 0..1), (Symbol("foo"), 1..4), (Symbol("bar"), 5..8)]),
+            (
+                "(not #c)",
+                vec![
+                    (LeftParenthesis, 0..1),
+                    (Symbol("not"), 1..4),
+                    (Unrecognized, 5..7),
+                    (RightParenthesis, 7..8),
+                ],
+            ),
+            (
+                "(foo bar",
+                vec![
+                    (LeftParenthesis, 0..1),
+                    (Symbol("foo"), 1..4),
+                    (Symbol("bar"), 5..8),
+                ],
+            ),
         ];
 
         for (source, expected) in &cases {

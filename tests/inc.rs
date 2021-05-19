@@ -1,4 +1,4 @@
-use inc::compile::run;
+use inc::compile::compile;
 use rand::random;
 use std::{fs, path::Path, process::Command};
 
@@ -12,7 +12,9 @@ fn test(input: &str, expected: &str) {
     let binary = directory.join("test");
 
     fs::create_dir_all(&directory).unwrap();
-    fs::write(&object, run(input).unwrap()).unwrap();
+
+    let output = compile(input.parse().unwrap()).unwrap();
+    fs::write(&object, output).unwrap();
 
     let status = Command::new("clang")
         .arg(&object)
@@ -29,7 +31,11 @@ fn test(input: &str, expected: &str) {
     let actual = actual.trim();
 
     assert!(result.status.success());
-    assert_eq!(expected, actual, "input = {}, expected = {}, actual = {}", input, expected, actual);
+    assert_eq!(
+        expected, actual,
+        "input = {}, expected = {}, actual = {}",
+        input, expected, actual
+    );
 
     fs::remove_dir_all(&directory).unwrap();
 }

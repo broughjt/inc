@@ -1,8 +1,8 @@
 use std::{fmt, str::FromStr};
 
-use super::expression::Expression;
+use super::Expression;
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub struct Call {
     pub primitive: UnaryPrimitive,
     pub expression: Box<Expression>,
@@ -17,7 +17,7 @@ impl Call {
     }
 }
 
-#[derive(Debug)]
+#[derive(Debug, PartialEq)]
 pub enum UnaryPrimitive {
     FxAdd1,
     FxSub1,
